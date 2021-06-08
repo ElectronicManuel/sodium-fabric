@@ -50,6 +50,26 @@ public abstract class MixinClientChunkManager implements ChunkStatusListenerMana
         }
     }
 
+    @Inject(method = "updateLoadDistance", at = @At("RETURN"))
+    private void afterLoadDistanceChanged(int loadDistance, CallbackInfo ci) {
+        LongIterator it = this.loadedChunks.iterator();
+
+        while (it.hasNext()) {
+            long pos = it.nextLong();
+
+            int x = ChunkPos.getPackedX(pos);
+            int z = ChunkPos.getPackedZ(pos);
+
+            if (this.getChunk(x, z, ChunkStatus.FULL, false) == null) {
+                it.remove();
+
+                if (this.listener != null) {
+                    this.listener.onChunkRemoved(x, z);
+                }
+            }
+        }
+    }
+
     @Inject(method = "tick", at = @At("RETURN"))
     private void afterTick(BooleanSupplier shouldKeepTicking, CallbackInfo ci) {
         if (!this.needsTrackingUpdate) {
