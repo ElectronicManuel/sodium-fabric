@@ -50,8 +50,12 @@ public abstract class MixinClientChunkManager implements ChunkStatusListenerMana
         }
     }
 
-    @Inject(method = "updateLoadDistance", at = @At("RETURN"))
-    private void afterLoadDistanceChanged(int loadDistance, CallbackInfo ci) {
+    @Inject(method = "tick", at = @At("RETURN"))
+    private void afterTick(BooleanSupplier shouldKeepTicking, CallbackInfo ci) {
+        if (!this.needsTrackingUpdate) {
+            return;
+        }
+
         LongIterator it = this.loadedChunks.iterator();
 
         while (it.hasNext()) {
@@ -68,6 +72,21 @@ public abstract class MixinClientChunkManager implements ChunkStatusListenerMana
                 }
             }
         }
+
+        this.needsTrackingUpdate = false;
+    }
+
+    @Inject(method = "setChunkMapCenter(II)V", at = @At("RETURN"))
+    private void afterChunkMapCenterChanged(int x, int z, CallbackInfo ci) {
+        this.needsTrackingUpdate = true;
+    }
+
+    @Inject(method = "updateLoadDistance",
+            at = @At(value = "INVOKE",
+                    target = "Lnet/minecraft/client/world/ClientChunkManager$ClientChunkMap;set(ILnet/minecraft/world/chunk/WorldChunk;)V",
+                    shift = At.Shift.AFTER))
+    private void afterLoadDistanceChanged(int loadDistance, CallbackInfo ci) {
+        this.needsTrackingUpdate = true;
     }
 
     @Inject(method = "tick", at = @At("RETURN"))
