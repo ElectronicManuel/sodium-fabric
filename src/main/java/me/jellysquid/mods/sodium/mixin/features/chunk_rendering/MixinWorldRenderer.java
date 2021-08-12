@@ -101,7 +101,7 @@ public abstract class MixinWorldRenderer implements WorldRendererExtended {
         RenderDevice.enterManagedCode();
 
         try {
-            this.renderer.drawChunkLayerWrapper(renderLayer, matrices, x, y, z);
+            this.renderer.drawChunkLayer(renderLayer, matrices, x, y, z);
         } finally {
             RenderDevice.exitManagedCode();
         }
