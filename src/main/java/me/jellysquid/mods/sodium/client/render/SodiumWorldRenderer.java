@@ -3,15 +3,12 @@ package me.jellysquid.mods.sodium.client.render;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import me.jellysquid.mods.sodium.client.SodiumClientMod;
+import me.jellysquid.mods.sodium.client.gl.device.CommandList;
 import me.jellysquid.mods.sodium.client.gl.device.RenderDevice;
-import me.jellysquid.mods.sodium.client.render.chunk.ChunkRenderer;
-import me.jellysquid.mods.sodium.client.render.chunk.RegionChunkRenderer;
 import me.jellysquid.mods.sodium.client.render.chunk.RenderSectionManager;
 import me.jellysquid.mods.sodium.client.render.chunk.data.ChunkRenderData;
-import me.jellysquid.mods.sodium.client.render.chunk.format.ChunkModelVertexFormats;
 import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPass;
 import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPassManager;
-import me.jellysquid.mods.sodium.client.render.chunk.region.RenderRegion;
 import me.jellysquid.mods.sodium.client.render.pipeline.context.ChunkRenderCacheShared;
 import me.jellysquid.mods.sodium.client.util.NativeBuffer;
 import me.jellysquid.mods.sodium.client.util.math.FrustumExtended;
@@ -88,7 +85,9 @@ public class SodiumWorldRenderer implements ChunkStatusListener {
 
         ChunkRenderCacheShared.createRenderContext(this.world);
 
-        this.initRenderer();
+        try (CommandList commandList = RenderDevice.INSTANCE.createCommandList()) {
+            this.initRenderer(commandList);
+        }
 
         ((ClientChunkManagerExtended) world.getChunkManager()).setListener(this);
     }
@@ -202,10 +201,12 @@ public class SodiumWorldRenderer implements ChunkStatusListener {
             return;
         }
 
-        this.initRenderer();
+        try (CommandList commandList = RenderDevice.INSTANCE.createCommandList()) {
+            this.initRenderer(commandList);
+        }
     }
 
-    private void initRenderer() {
+    private void initRenderer(CommandList commandList) {
         if (this.renderSectionManager != null) {
             this.renderSectionManager.destroy();
             this.renderSectionManager = null;
@@ -389,35 +390,6 @@ public class SodiumWorldRenderer implements ChunkStatusListener {
 =======
 >>>>>>> bb33a03 (change: Implement multiple backends for buffer arenas)
     public Collection<String> getMemoryDebugStrings() {
-        List<String> list = new ArrayList<>();
-
-        Iterator<RenderRegion.RenderRegionArenas> it = this.renderSectionManager.getRegions()
-                .stream()
-                .map(RenderRegion::getArenas)
-                .filter(Objects::nonNull)
-                .iterator();
-
-        int count = 0;
-
-        long deviceUsed = 0;
-        long deviceAllocated = 0;
-
-        while (it.hasNext()) {
-            RenderRegion.RenderRegionArenas arena = it.next();
-            deviceUsed += arena.getDeviceUsedMemory();
-            deviceAllocated += arena.getDeviceAllocatedMemory();
-
-            count++;
-        }
-
-        list.add(String.format("Chunk arena allocator: %s", SodiumClientMod.options().advanced.arenaMemoryAllocator.name()));
-        list.add(String.format("Device buffer objects: %d", count));
-        list.add(String.format("Device memory: %d/%d MiB", toMib(deviceUsed), toMib(deviceAllocated)));
-
-        return list;
-    }
-
-    private static long toMib(long x) {
-        return x / 1024L / 1024L;
+        return this.renderSectionManager.getDebugStrings();
     }
 }
