@@ -5,6 +5,7 @@ import me.jellysquid.mods.sodium.client.gl.device.RenderDevice;
 import me.jellysquid.mods.sodium.client.render.SodiumWorldRenderer;
 import me.jellysquid.mods.sodium.client.util.FlawlessFrames;
 import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPass;
+import me.jellysquid.mods.sodium.client.util.math.JomlHelper;
 import me.jellysquid.mods.sodium.client.world.WorldRendererExtended;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.GameOptions;
@@ -13,6 +14,8 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Matrix4f;
+import net.minecraft.util.math.Vec3d;
+import org.joml.FrustumIntersection;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -107,12 +110,21 @@ public abstract class MixinWorldRenderer implements WorldRendererExtended {
         }
     }
 
+    @Inject(method = "setupFrustum", at = @At("RETURN"))
+    private void setupFrustum(MatrixStack matrices, Vec3d pos, Matrix4f projectionMatrix, CallbackInfo ci) {
+        org.joml.Matrix4f modelViewMatrix = JomlHelper.copy(projectionMatrix);
+        modelViewMatrix.mul(JomlHelper.copy(matrices.peek().getModel()));
+        modelViewMatrix.translate((float) -pos.getX(), (float) -pos.getY(), (float) -pos.getZ());
+
+        this.renderer.setCullingFrustum(new FrustumIntersection(modelViewMatrix, false));
+    }
+
     /**
      * @reason Redirect the terrain setup phase to our renderer
      * @author JellySquid
      */
     @Overwrite
-    private void setupTerrain(Camera camera, Frustum frustum, boolean hasForcedFrustum, int frame, boolean spectator) {
+    private void setupTerrain(Camera camera, Frustum _frustum, boolean hasForcedFrustum, int frame, boolean spectator) {
         RenderDevice.enterManagedCode();
 
         try {
