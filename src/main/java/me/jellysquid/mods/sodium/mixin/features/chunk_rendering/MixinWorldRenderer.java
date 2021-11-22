@@ -7,7 +7,6 @@ import me.jellysquid.mods.sodium.client.util.FlawlessFrames;
 import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPass;
 import me.jellysquid.mods.sodium.client.util.frustum.FrustumAccessor;
 import me.jellysquid.mods.sodium.client.util.frustum.FrustumAdapter;
-import me.jellysquid.mods.sodium.client.util.math.JomlHelper;
 import me.jellysquid.mods.sodium.client.world.WorldRendererExtended;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.GameOptions;
@@ -16,7 +15,6 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Matrix4f;
-import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -120,7 +118,6 @@ public abstract class MixinWorldRenderer implements WorldRendererExtended {
         RenderDevice.enterManagedCode();
 
         try {
-<<<<<<< HEAD
             this.renderer.updateChunks(camera, frustum, hasForcedFrustum, frame, spectator);
 
             if (FlawlessFrames.isActive()) {
@@ -136,9 +133,7 @@ public abstract class MixinWorldRenderer implements WorldRendererExtended {
                 // We set this because third-party mods may use it (to loop themselves), even if Vanilla does not.
                 this.needsTerrainUpdate = false;
             }
-=======
-            this.renderer.updateChunks(camera, new FrustumAdapter((FrustumAccessor) frustum), frame, spectator);
->>>>>>> f63250e (change: Try to extract frustum matrices from vanilla)
+            this.renderer.updateChunks(camera, FrustumAdapter.adapt(frustum), frame, spectator);
         } finally {
             RenderDevice.exitManagedCode();
         }
