@@ -5,6 +5,8 @@ import me.jellysquid.mods.sodium.client.gl.device.RenderDevice;
 import me.jellysquid.mods.sodium.client.render.SodiumWorldRenderer;
 import me.jellysquid.mods.sodium.client.util.FlawlessFrames;
 import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPass;
+import me.jellysquid.mods.sodium.client.util.frustum.FrustumAccessor;
+import me.jellysquid.mods.sodium.client.util.frustum.FrustumAdapter;
 import me.jellysquid.mods.sodium.client.util.math.JomlHelper;
 import me.jellysquid.mods.sodium.client.world.WorldRendererExtended;
 import net.minecraft.client.MinecraftClient;
@@ -109,24 +111,16 @@ public abstract class MixinWorldRenderer implements WorldRendererExtended {
         }
     }
 
-    @Inject(method = "setupFrustum", at = @At("RETURN"))
-    private void setupFrustum(MatrixStack matrices, Vec3d pos, Matrix4f projectionMatrix, CallbackInfo ci) {
-        org.joml.Matrix4f modelViewMatrix = JomlHelper.copy(projectionMatrix);
-        modelViewMatrix.mul(JomlHelper.copy(matrices.peek().getModel()));
-        modelViewMatrix.translate((float) -pos.getX(), (float) -pos.getY(), (float) -pos.getZ());
-
-        this.renderer.setModelViewProjectionMatrix(modelViewMatrix);
-    }
-
     /**
      * @reason Redirect the terrain setup phase to our renderer
      * @author JellySquid
      */
     @Overwrite
-    private void setupTerrain(Camera camera, Frustum _frustum, boolean hasForcedFrustum, int frame, boolean spectator) {
+    private void setupTerrain(Camera camera, Frustum frustum, boolean hasForcedFrustum, int frame, boolean spectator) {
         RenderDevice.enterManagedCode();
 
         try {
+<<<<<<< HEAD
             this.renderer.updateChunks(camera, frustum, hasForcedFrustum, frame, spectator);
 
             if (FlawlessFrames.isActive()) {
@@ -142,6 +136,9 @@ public abstract class MixinWorldRenderer implements WorldRendererExtended {
                 // We set this because third-party mods may use it (to loop themselves), even if Vanilla does not.
                 this.needsTerrainUpdate = false;
             }
+=======
+            this.renderer.updateChunks(camera, new FrustumAdapter((FrustumAccessor) frustum), frame, spectator);
+>>>>>>> f63250e (change: Try to extract frustum matrices from vanilla)
         } finally {
             RenderDevice.exitManagedCode();
         }
