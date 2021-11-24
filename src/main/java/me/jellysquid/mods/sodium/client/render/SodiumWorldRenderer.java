@@ -187,6 +187,7 @@ public class SodiumWorldRenderer {
 
         profiler.swap("chunk_update");
 
+        this.chunkTracker.update();
         this.renderSectionManager.updateChunks();
 
         if (this.renderSectionManager.isGraphDirty()) {
@@ -300,17 +301,17 @@ public class SodiumWorldRenderer {
     }
 
     public void onChunkAdded(int x, int z) {
-        if (this.chunkTracker.addChunk(x, z)) {
+        if (this.chunkTracker.loadChunk(x, z)) {
             this.renderSectionManager.onChunkAdded(x, z);
         }
     }
 
     public void onChunkLightAdded(int x, int z) {
-        this.chunkTracker.onLightAdded(x, z);
+        this.chunkTracker.onLightDataAdded(x, z);
     }
 
     public void onChunkRemoved(int x, int z) {
-        if (this.chunkTracker.removeChunk(x, z)) {
+        if (this.chunkTracker.unloadChunk(x, z)) {
             this.renderSectionManager.onChunkRemoved(x, z);
         }
     }
