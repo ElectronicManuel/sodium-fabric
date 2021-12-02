@@ -4,7 +4,6 @@ import me.jellysquid.mods.sodium.client.gui.options.binding.GenericBinding;
 import me.jellysquid.mods.sodium.client.gui.options.binding.OptionBinding;
 import me.jellysquid.mods.sodium.client.gui.options.control.Control;
 import me.jellysquid.mods.sodium.client.gui.options.storage.OptionStorage;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import org.apache.commons.lang3.Validate;
 
@@ -22,7 +21,7 @@ public class OptionImpl<S, T> implements Option<T> {
 
     private final EnumSet<OptionFlag> flags;
 
-    private final String name;
+    private final Text name;
     private final Text tooltip;
 
     private T value;
@@ -31,15 +30,15 @@ public class OptionImpl<S, T> implements Option<T> {
     private final boolean enabled;
 
     private OptionImpl(OptionStorage<S> storage,
-                       String name,
-                       String tooltip,
+                       Text name,
+                       Text tooltip,
                        OptionBinding<S, T> binding,
                        Function<OptionImpl<S, T>, Control<T>> control,
                        EnumSet<OptionFlag> flags,
                        boolean enabled) {
         this.storage = storage;
         this.name = name;
-        this.tooltip = new LiteralText(tooltip);
+        this.tooltip = tooltip;
         this.binding = binding;
         this.flags = flags;
         this.control = control.apply(this);
@@ -49,7 +48,7 @@ public class OptionImpl<S, T> implements Option<T> {
     }
 
     @Override
-    public String getName() {
+    public Text getName() {
         return this.name;
     }
 
@@ -91,7 +90,7 @@ public class OptionImpl<S, T> implements Option<T> {
 
     @Override
     public boolean hasChanged() {
-        return this.value != this.modifiedValue;
+        return !this.value.equals(this.modifiedValue);
     }
 
     @Override
@@ -111,8 +110,8 @@ public class OptionImpl<S, T> implements Option<T> {
 
     public static class Builder<S, T> {
         private final OptionStorage<S> storage;
-        private String name;
-        private String tooltip;
+        private Text name;
+        private Text tooltip;
         private OptionBinding<S, T> binding;
         private Function<OptionImpl<S, T>, Control<T>> control;
         private OptionImpact impact;
@@ -123,7 +122,7 @@ public class OptionImpl<S, T> implements Option<T> {
             this.storage = storage;
         }
 
-        public Builder<S, T> setName(String name) {
+        public Builder<S, T> setName(Text name) {
             Validate.notNull(name, "Argument must not be null");
 
             this.name = name;
@@ -131,7 +130,7 @@ public class OptionImpl<S, T> implements Option<T> {
             return this;
         }
 
-        public Builder<S, T> setTooltip(String tooltip) {
+        public Builder<S, T> setTooltip(Text tooltip) {
             Validate.notNull(tooltip, "Argument must not be null");
 
             this.tooltip = tooltip;
